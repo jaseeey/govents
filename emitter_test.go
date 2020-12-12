@@ -1,8 +1,8 @@
 package events
 
 import (
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"gotest.tools/assert"
 	"reflect"
 	"sync"
 	"testing"
@@ -14,9 +14,9 @@ func TestNew(t *testing.T) {
 	em := New()
 	_, lockExists := reflect.TypeOf(em).MethodByName("Lock")
 	_, unlockExists := reflect.TypeOf(em).MethodByName("Unlock")
-	assert.DeepEqual(t, em.Listeners, make(map[string][]*Listener))
-	assert.Assert(t, lockExists, true)
-	assert.Assert(t, unlockExists, true)
+	assert.EqualValues(t, em.Listeners, make(map[string][]*Listener))
+	assert.True(t, lockExists)
+	assert.True(t, unlockExists)
 }
 
 func TestEmitter_AddListener(t *testing.T) {
@@ -42,6 +42,17 @@ func TestEmitter_RemoveListener(t *testing.T) {
 	assert.Equal(t, len(em.Listeners[listener.EventName]), 0)
 }
 
+func Test_RemoveListener_eventPurgedFromListeners(t *testing.T) {
+	em := New()
+	listener1 := Listener{EventName: mockEventName, ListenerFn: func(e *Event) {}}
+	listener2 := Listener{EventName: mockEventName, ListenerFn: func(e *Event) {}}
+	em.Listeners[listener1.EventName] = append(em.Listeners[listener1.EventName], &listener1)
+	em.Listeners[listener2.EventName] = append(em.Listeners[listener2.EventName], &listener2)
+	em.RemoveListener(&listener1)
+	em.RemoveListener(&listener2)
+	assert.NotContains(t, em.Listeners, mockEventName)
+}
+
 func TestEmitter_EventNames(t *testing.T) {
 	em := New()
 	listener := Listener{
@@ -50,7 +61,7 @@ func TestEmitter_EventNames(t *testing.T) {
 	}
 	expectedEventNames := []string{mockEventName}
 	em.AddListener(&listener)
-	assert.DeepEqual(t, em.EventNames(), expectedEventNames)
+	assert.EqualValues(t, em.EventNames(), expectedEventNames)
 }
 
 type MockCallable struct {

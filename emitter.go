@@ -52,6 +52,9 @@ func (em *Emitter) RemoveListener(listener *Listener) {
 			em.Listeners[eventName] = em.Listeners[eventName][:len(em.Listeners[eventName])-1]
 		}
 	}
+	if len(em.Listeners[eventName]) == 0 {
+		em.RemoveAllListeners(eventName)
+	}
 }
 
 func (em *Emitter) RemoveAllListeners(eventName string) {
