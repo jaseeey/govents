@@ -10,8 +10,8 @@ import (
 
 const mockEventName string = "call:event"
 
-func TestNew(t *testing.T) {
-	em := New()
+func TestInitEmitter(t *testing.T) {
+	em := InitEmitter()
 	_, lockExists := reflect.TypeOf(em).MethodByName("Lock")
 	_, unlockExists := reflect.TypeOf(em).MethodByName("Unlock")
 	assert.EqualValues(t, em.Listeners, make(map[string][]*Listener))
@@ -19,8 +19,8 @@ func TestNew(t *testing.T) {
 	assert.True(t, unlockExists)
 }
 
-func TestEmitter_AddListener(t *testing.T) {
-	em := New()
+func TestAddsListenerForEvent(t *testing.T) {
+	em := InitEmitter()
 	listener := Listener{
 		EventName:  mockEventName,
 		ListenerFn: func(event *Event) {},
@@ -30,8 +30,8 @@ func TestEmitter_AddListener(t *testing.T) {
 	assert.Equal(t, em.Listeners[listener.EventName][0], &listener)
 }
 
-func TestEmitter_RemoveListener(t *testing.T) {
-	em := New()
+func TestRemovesListenerForEvent(t *testing.T) {
+	em := InitEmitter()
 	listener := Listener{
 		EventName:  mockEventName,
 		ListenerFn: func(event *Event) {},
@@ -42,8 +42,8 @@ func TestEmitter_RemoveListener(t *testing.T) {
 	assert.Equal(t, len(em.Listeners[listener.EventName]), 0)
 }
 
-func Test_RemoveListener_eventPurgedFromListeners(t *testing.T) {
-	em := New()
+func TestMapKeyIsPurgedForEvent(t *testing.T) {
+	em := InitEmitter()
 	listener1 := Listener{EventName: mockEventName, ListenerFn: func(e *Event) {}}
 	listener2 := Listener{EventName: mockEventName, ListenerFn: func(e *Event) {}}
 	em.Listeners[listener1.EventName] = append(em.Listeners[listener1.EventName], &listener1)
@@ -53,8 +53,8 @@ func Test_RemoveListener_eventPurgedFromListeners(t *testing.T) {
 	assert.NotContains(t, em.Listeners, mockEventName)
 }
 
-func TestEmitter_EventNames(t *testing.T) {
-	em := New()
+func TestListsAllRegisteredEvents(t *testing.T) {
+	em := InitEmitter()
 	listener := Listener{
 		EventName:  mockEventName,
 		ListenerFn: func(event *Event) {},
@@ -81,7 +81,7 @@ func TestEventIsEmitted(t *testing.T) {
 	mockCallable.On("handleMockEvent", mock.Anything).Return()
 	mockListener := Listener{EventName: mockEventName, ListenerFn: mockCallable.handleMockEvent}
 	mockEvent := Event{EventName: mockEventName}
-	em := New()
+	em := InitEmitter()
 	em.AddListener(&mockListener)
 	em.Emit(&mockEvent)
 	wg.Wait()

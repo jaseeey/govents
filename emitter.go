@@ -20,7 +20,7 @@ type Emitter struct {
 	Listeners map[string][]*Listener
 }
 
-func New() *Emitter {
+func InitEmitter() *Emitter {
 	return &Emitter{
 		Listeners: make(map[string][]*Listener),
 	}
@@ -46,11 +46,12 @@ func (em *Emitter) RemoveListener(listener *Listener) {
 	origListenerPtr := reflect.ValueOf(listener).Pointer()
 	for i, curListener := range em.Listeners[eventName] {
 		curListenerPtr := reflect.ValueOf(curListener).Pointer()
-		if origListenerPtr == curListenerPtr {
-			copy(em.Listeners[eventName][i:], em.Listeners[eventName][(i+1):])
-			em.Listeners[eventName][len(em.Listeners[eventName])-1] = nil
-			em.Listeners[eventName] = em.Listeners[eventName][:len(em.Listeners[eventName])-1]
+		if origListenerPtr != curListenerPtr {
+			continue
 		}
+		copy(em.Listeners[eventName][i:], em.Listeners[eventName][(i+1):])
+		em.Listeners[eventName][len(em.Listeners[eventName])-1] = nil
+		em.Listeners[eventName] = em.Listeners[eventName][:len(em.Listeners[eventName])-1]
 	}
 	if len(em.Listeners[eventName]) == 0 {
 		em.RemoveAllListeners(eventName)
