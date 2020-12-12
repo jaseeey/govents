@@ -1,8 +1,10 @@
 package events
 
 import (
+	"github.com/stretchr/testify/mock"
 	"gotest.tools/assert"
 	"reflect"
+	"sync"
 	"testing"
 )
 
@@ -49,4 +51,28 @@ func TestEmitter_EventNames(t *testing.T) {
 	expectedEventNames := []string{mockEventName}
 	em.AddListener(&listener)
 	assert.DeepEqual(t, em.EventNames(), expectedEventNames)
+}
+
+type MockCallable struct {
+	mock.Mock
+	waitGroup *sync.WaitGroup
+}
+
+func (m *MockCallable) handleMockEvent(e *Event) {
+	defer m.waitGroup.Done()
+	m.Called(e.EventName)
+}
+
+func TestEmitsEventSuccessfully(t *testing.T) {
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	mockCallable := MockCallable{waitGroup: &wg}
+	mockCallable.On("handleMockEvent", mock.Anything).Return()
+	mockListener := Listener{EventName: "mock:event", ListenerFn: mockCallable.handleMockEvent}
+	mockEvent := Event{EventName: "mock:event"}
+	em := New()
+	em.AddListener(&mockListener)
+	em.Emit(&mockEvent)
+	wg.Wait()
+	mockCallable.AssertCalled(t, "handleMockEvent", mock.Anything)
 }
