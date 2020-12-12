@@ -63,13 +63,13 @@ func (m *MockCallable) handleMockEvent(e *Event) {
 	m.Called(e.EventName)
 }
 
-func TestEmitsEventSuccessfully(t *testing.T) {
+func TestEventIsEmitted(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	mockCallable := MockCallable{waitGroup: &wg}
 	mockCallable.On("handleMockEvent", mock.Anything).Return()
-	mockListener := Listener{EventName: "mock:event", ListenerFn: mockCallable.handleMockEvent}
-	mockEvent := Event{EventName: "mock:event"}
+	mockListener := Listener{EventName: mockEventName, ListenerFn: mockCallable.handleMockEvent}
+	mockEvent := Event{EventName: mockEventName}
 	em := New()
 	em.AddListener(&mockListener)
 	em.Emit(&mockEvent)
