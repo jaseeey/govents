@@ -1,4 +1,4 @@
-package events
+package govents
 
 import (
 	"github.com/stretchr/testify/assert"
